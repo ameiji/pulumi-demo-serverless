@@ -1,6 +1,6 @@
 config:
   aws:region: eu-north-1
   aws:profile: workshop
-  aws:allowedAccountIds: 474008963679
+  aws:allowedAccountIds: [474008963679]
   pulumi:template: aws-python
 
