@@ -4,9 +4,9 @@ config:
   aws:allowedAccountIds: [474008963679]
   aws:defaultTags:
     tags:
-      purpose: workshop-serverless
-      owner: "psalnikov dsarkisov"
-      env: demo
+      Project: workshop-serverless
+      Owner: "psalnikov dsarkisov"
+      Env: demo
   pulumi:template: aws-python
   
 
