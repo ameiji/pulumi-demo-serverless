@@ -1,0 +1,12 @@
+[
+  {
+    "name": "cognito-username",
+    "type": "S",
+    "index": "hash_key"
+  },
+  {
+    "name": "id",
+    "type": "S",
+    "index": "range_key"
+  }
+]
