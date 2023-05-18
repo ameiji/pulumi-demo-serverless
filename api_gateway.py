@@ -4,12 +4,35 @@ from typing import Dict, Tuple, List, Any
 import pulumi
 import pulumi_aws as aws
 from lambda_functions import create_lambda_function
-from api import api_resources, APIResourceDescription
+from api import api_resources, APIResourceDescription, APIResourceFunction
 
 
 _methods: List[pulumi.CustomResource] = []
 _integrations: List[pulumi.CustomResource] = []
 _resources: Dict[str, aws.apigateway.Resource] = {}
+
+
+def _create_lambda_resource(api_function: APIResourceFunction, rest_api: aws.apigateway.RestApi) -> aws.lambda_.Function:
+
+    lambda_ = create_lambda_function(
+        name=api_function.name,
+        filename=api_function.filename,
+        runtime=api_function.runtime,
+        handler=api_function.handler,
+        description=api_function.description,
+    )
+
+    lambda_permission = aws.lambda_.Permission(
+        f"{api_function.name}LambdaPermission",
+        action="lambda:InvokeFunction",
+        function=api_function.name,
+        principal="apigateway.amazonaws.com",
+        source_arn=rest_api.execution_arn.apply(
+            lambda execution_arn: f"{execution_arn}/{api_function.allowed_path}"
+        ),
+        opts=pulumi.ResourceOptions(parent=rest_api),
+    )
+    return lambda_
 
 
 def _create_resource(
@@ -18,25 +41,7 @@ def _create_resource(
     path_part = path.split("/")[-1]
 
     for method, api_function in api_resource.methods.items():
-        lambda_ = create_lambda_function(
-            name=api_function.name,
-            filename=api_function.filename,
-            runtime=api_function.runtime,
-            handler=api_function.handler,
-            description=api_resource.description,
-        )
-
-        lambda_permission = aws.lambda_.Permission(
-            f"{api_function.name}LambdaPermission",
-            action="lambda:InvokeFunction",
-            function=api_function.name,
-            principal="apigateway.amazonaws.com",
-            source_arn=rest_api.execution_arn.apply(
-                lambda execution_arn: f"{execution_arn}/{api_function.allowed_path}"
-            ),
-            opts=pulumi.ResourceOptions(parent=rest_api),
-        )
-
+        lambda_ = _create_lambda_resource(api_function, rest_api)
         api_resource.methods[method].lambda_ = lambda_
 
     if api_resource.is_root:

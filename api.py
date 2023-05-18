@@ -16,6 +16,7 @@ class APIResourceFunction(BaseModel):
     allowed_path: str
     runtime: str = "nodejs16.x"
     lambda_: Any
+    description: Optional[str] = ""
 
     @validator("filename", always=True)
     def _filename_validator(cls, filename: Optional[str], values) -> str:
