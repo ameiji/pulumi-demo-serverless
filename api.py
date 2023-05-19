@@ -1,11 +1,8 @@
 import sys
 import os.path
-
-import pulumi
-import pulumi_aws as aws
+from pydantic import validator, BaseModel, ValidationError
 from collections import OrderedDict
 from typing import Optional, Dict, List, Literal, Any
-from pydantic import validator, BaseModel, ValidationError
 
 
 BACKEND_SRC_PATH = "./backend-src"
@@ -31,7 +28,9 @@ class APIResourceDescription(BaseModel):
     name: str
     is_root: bool = False
     type: str = "AWS_PROXY"
-    methods: Dict[Literal["GET", "POST", "UPDATE", "DELETE", "PUT"], APIResourceFunction]
+    methods: Dict[
+        Literal["GET", "POST", "UPDATE", "DELETE", "PUT"], APIResourceFunction
+    ]
     description: Optional[str]
 
     @validator("description", always=True)
@@ -74,7 +73,8 @@ deleteTodo = APIResourceFunction(
 
 
 try:
-    api_resources = OrderedDict({
+    api_resources = OrderedDict(
+        {
             "/item": APIResourceDescription(
                 name="item",
                 is_root=True,
@@ -90,8 +90,9 @@ try:
             "/item/{id}/done": APIResourceDescription(
                 name="itemIdDone",
                 methods={"POST": completeTodo}
-            )
-        })
+            ),
+        }
+    )
 except ValidationError as err:
     print(err)
     sys.exit(1)

@@ -8,13 +8,13 @@ from cognito import create_cognito_authorizer
 from api import api_resources, APIResourceDescription, APIResourceFunction
 
 
-# _methods: List[pulumi.CustomResource] = []
 _integrations: List[pulumi.CustomResource] = []
 _resources: Dict[str, aws.apigateway.Resource] = {}
 
 
-def _create_lambda_resource(api_function: APIResourceFunction, rest_api: aws.apigateway.RestApi) -> aws.lambda_.Function:
-
+def _create_lambda_resource(
+    api_function: APIResourceFunction, rest_api: aws.apigateway.RestApi
+) -> aws.lambda_.Function:
     # AWS Lambda
     lambda_ = create_lambda_function(
         name=api_function.name,
@@ -44,7 +44,7 @@ def _create_resource(
     rest_api: aws.apigateway.RestApi,
     path: str,
     api_resource: APIResourceDescription,
-    authorizer: aws.apigateway.Authorizer
+    authorizer: aws.apigateway.Authorizer,
 ):
     path_part = path.split("/")[-1]
 
@@ -86,7 +86,6 @@ def _create_resource(
             authorizer_id=authorizer.id,
             opts=pulumi.ResourceOptions(parent=rest_api, depends_on=[authorizer]),
         )
-        # _methods.append(method)
 
         # API GW Integration
         integration = aws.apigateway.Integration(
@@ -103,7 +102,7 @@ def _create_resource(
 
 
 def create_api_gateway() -> Tuple[pulumi.Output]:
-    # API GW
+    # API Gateway
     rest_api_name = "workshopServerlessJukeBox"
     rest_api = aws.apigateway.RestApi(rest_api_name)
 
@@ -111,8 +110,12 @@ def create_api_gateway() -> Tuple[pulumi.Output]:
     cognito_authorizer = create_cognito_authorizer(rest_api)
 
     for resource_path, resource in api_resources.items():
-        _create_resource(rest_api=rest_api, path=resource_path, api_resource=resource, authorizer=cognito_authorizer)
-
+        _create_resource(
+            rest_api=rest_api,
+            path=resource_path,
+            api_resource=resource,
+            authorizer=cognito_authorizer,
+        )
 
     # API GW Deployment
     deployment = aws.apigateway.Deployment(
@@ -124,7 +127,6 @@ def create_api_gateway() -> Tuple[pulumi.Output]:
             ),
         },
         opts=pulumi.ResourceOptions(
-            # depends_on=[*_resources.values(), *_methods, *_integrations], parent=rest_api
             depends_on=[*_resources.values(), *_integrations], parent=rest_api
         ),
     )
