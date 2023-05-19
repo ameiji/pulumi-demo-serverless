@@ -4,10 +4,11 @@ from typing import Dict, Tuple, List, Any
 import pulumi
 import pulumi_aws as aws
 from lambda_functions import create_lambda_function
+from cognito import create_cognito_authorizer
 from api import api_resources, APIResourceDescription, APIResourceFunction
 
 
-_methods: List[pulumi.CustomResource] = []
+# _methods: List[pulumi.CustomResource] = []
 _integrations: List[pulumi.CustomResource] = []
 _resources: Dict[str, aws.apigateway.Resource] = {}
 
@@ -33,11 +34,17 @@ def _create_lambda_resource(api_function: APIResourceFunction, rest_api: aws.api
         ),
         opts=pulumi.ResourceOptions(parent=rest_api),
     )
+
+    # AWS GW Authorizer resource.
+
     return lambda_
 
 
 def _create_resource(
-    rest_api: aws.apigateway.RestApi, path: str, api_resource: APIResourceDescription
+    rest_api: aws.apigateway.RestApi,
+    path: str,
+    api_resource: APIResourceDescription,
+    authorizer: aws.apigateway.Authorizer
 ):
     path_part = path.split("/")[-1]
 
@@ -57,9 +64,6 @@ def _create_resource(
         _resources[path] = resource
     else:
         parent_path = "/".join(path.split("/")[:-1])
-        # parent_res_id = aws.apigateway.get_resource(
-        #     rest_api_id=rest_api.id,
-        #     path=parent_path)
         resource = aws.apigateway.Resource(
             api_resource.name,
             parent_id=_resources[parent_path].id,
@@ -75,13 +79,14 @@ def _create_resource(
         # API GW Method
         method = aws.apigateway.Method(
             f"{api_resource.name}{api_resource_method}",
-            authorization="NONE",
             http_method=api_resource_method,
             resource_id=resource.id,
             rest_api=rest_api.id,
-            opts=pulumi.ResourceOptions(parent=rest_api),
+            authorization="COGNITO_USER_POOLS",
+            authorizer_id=authorizer.id,
+            opts=pulumi.ResourceOptions(parent=rest_api, depends_on=[authorizer]),
         )
-        _methods.append(method)
+        # _methods.append(method)
 
         # API GW Integration
         integration = aws.apigateway.Integration(
@@ -102,8 +107,12 @@ def create_api_gateway() -> Tuple[pulumi.Output]:
     rest_api_name = "workshopServerlessJukeBox"
     rest_api = aws.apigateway.RestApi(rest_api_name)
 
+    # API GW Cognito authorizer
+    cognito_authorizer = create_cognito_authorizer(rest_api)
+
     for resource_path, resource in api_resources.items():
-        _create_resource(rest_api=rest_api, path=resource_path, api_resource=resource)
+        _create_resource(rest_api=rest_api, path=resource_path, api_resource=resource, authorizer=cognito_authorizer)
+
 
     # API GW Deployment
     deployment = aws.apigateway.Deployment(
@@ -115,7 +124,8 @@ def create_api_gateway() -> Tuple[pulumi.Output]:
             ),
         },
         opts=pulumi.ResourceOptions(
-            depends_on=[*_resources.values(), *_methods, *_integrations], parent=rest_api
+            # depends_on=[*_resources.values(), *_methods, *_integrations], parent=rest_api
+            depends_on=[*_resources.values(), *_integrations], parent=rest_api
         ),
     )
     # API GW Stage

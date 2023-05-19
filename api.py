@@ -1,5 +1,7 @@
 import sys
 import os.path
+
+import pulumi
 import pulumi_aws as aws
 from collections import OrderedDict
 from typing import Optional, Dict, List, Literal, Any
@@ -15,7 +17,7 @@ class APIResourceFunction(BaseModel):
     handler: str
     allowed_path: str
     runtime: str = "nodejs16.x"
-    lambda_: aws.lambda_.Function
+    lambda_: Any
     description: Optional[str] = ""
 
     @validator("filename", always=True)
