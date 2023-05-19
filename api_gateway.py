@@ -14,6 +14,7 @@ _resources: Dict[str, aws.apigateway.Resource] = {}
 
 def _create_lambda_resource(api_function: APIResourceFunction, rest_api: aws.apigateway.RestApi) -> aws.lambda_.Function:
 
+    # AWS Lambda
     lambda_ = create_lambda_function(
         name=api_function.name,
         filename=api_function.filename,
@@ -44,6 +45,7 @@ def _create_resource(
         lambda_ = _create_lambda_resource(api_function, rest_api)
         api_resource.methods[method].lambda_ = lambda_
 
+    # API GW Resource
     if api_resource.is_root:
         resource = aws.apigateway.Resource(
             api_resource.name,
@@ -70,6 +72,7 @@ def _create_resource(
         _resources[path] = resource
 
     for api_resource_method, api_function in api_resource.methods.items():
+        # API GW Method
         method = aws.apigateway.Method(
             f"{api_resource.name}{api_resource_method}",
             authorization="NONE",
@@ -80,6 +83,7 @@ def _create_resource(
         )
         _methods.append(method)
 
+        # API GW Integration
         integration = aws.apigateway.Integration(
             f"{api_resource.name}{api_resource_method}Integration",
             rest_api=rest_api.id,
@@ -94,12 +98,14 @@ def _create_resource(
 
 
 def create_api_gateway() -> Tuple[pulumi.Output]:
+    # API GW
     rest_api_name = "workshopServerlessJukeBox"
     rest_api = aws.apigateway.RestApi(rest_api_name)
 
     for resource_path, resource in api_resources.items():
         _create_resource(rest_api=rest_api, path=resource_path, api_resource=resource)
 
+    # API GW Deployment
     deployment = aws.apigateway.Deployment(
         f"{rest_api_name}Deployment",
         rest_api=rest_api.id,
@@ -112,6 +118,7 @@ def create_api_gateway() -> Tuple[pulumi.Output]:
             depends_on=[*_resources.values(), *_methods, *_integrations], parent=rest_api
         ),
     )
+    # API GW Stage
     stage = aws.apigateway.Stage(
         f"{rest_api_name}Stage",
         deployment=deployment.id,

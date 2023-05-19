@@ -15,7 +15,7 @@ class APIResourceFunction(BaseModel):
     handler: str
     allowed_path: str
     runtime: str = "nodejs16.x"
-    lambda_: Any
+    lambda_: aws.lambda_.Function
     description: Optional[str] = ""
 
     @validator("filename", always=True)
@@ -31,7 +31,6 @@ class APIResourceDescription(BaseModel):
     type: str = "AWS_PROXY"
     methods: Dict[Literal["GET", "POST", "UPDATE", "DELETE", "PUT"], APIResourceFunction]
     description: Optional[str]
-
 
     @validator("description", always=True)
     def _description_validator(cls, description: Optional[str], values) -> str:
