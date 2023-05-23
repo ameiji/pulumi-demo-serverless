@@ -38,6 +38,8 @@ else
 fi
 
 npm run build
-
 popd
+
+rm -rf frontend-src/build/
+cp -rv "$BUILD_DIR/frontend-src/build" frontend-src/
 

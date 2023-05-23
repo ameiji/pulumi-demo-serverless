@@ -162,3 +162,7 @@ cython_debug/
 venv/
 
 *.zip
+
+# ToDO API
+
+frontend-src/build/
