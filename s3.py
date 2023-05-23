@@ -5,7 +5,7 @@ from pulumi import FileAsset, Output, ResourceOptions
 from pulumi_aws import s3
 
 
-FRONTEND_SRC_PATH = "./frontend-src"
+FRONTEND_SRC_PATH = "./frontend-src/build"
 
 
 def _upload_dir_to_s3(content_dir: str, bucket: s3.Bucket):
@@ -14,13 +14,23 @@ def _upload_dir_to_s3(content_dir: str, bucket: s3.Bucket):
             file_path = os.path.join(root, file)
             relative_path = os.path.relpath(file_path, content_dir)
 
+            if "index.html" in file_path:
+                content_type = "text/html"
+            elif ".css" in file_path:
+                content_type = "text/css"
+            elif ".json" in file_path or ".js" in file_path:
+                content_type = "application/javascript"
+            else:
+                content_type = None
+
             bucket_object = s3.BucketObject(
-                relative_path.replace('\\', '/'),
+                relative_path.replace("\\", "/"),
                 # Replace backslashes with forward slashes for Windows compatibility
                 bucket=bucket.id,
                 source=FileAsset(file_path),
-                acl='private',
-                opts=ResourceOptions(parent=bucket),
+                acl="private",
+                content_type=content_type,
+                opts=ResourceOptions(parent=bucket)
             )
 
 
@@ -39,7 +49,7 @@ def _public_read_policy_for_bucket(bucket_id: Output[str]) -> Output:
                     "Condition": {
                         "IpAddress": {
                             "aws:SourceIp": [
-                                "93.86.137.18/32",
+                                "79.140.150.128/32",
                             ]
                         }
                     }

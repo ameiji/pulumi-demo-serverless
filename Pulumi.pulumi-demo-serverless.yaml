@@ -8,6 +8,7 @@ config:
       Owner: "psalnikov dsarkisov"
       Env: demo
   pulumi:template: aws-python
+  stageName: demo
 #  boundaryPolicy: "arn:aws:iam::474008963679:policy/DefaultBoundaryPolicy"
 
 

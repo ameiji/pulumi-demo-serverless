@@ -135,8 +135,8 @@ def create_api_gateway() -> Tuple[pulumi.Output]:
         f"{rest_api_name}Stage",
         deployment=deployment.id,
         rest_api=rest_api.id,
-        stage_name="demo",
-        opts=pulumi.ResourceOptions(parent=rest_api),
+        stage_name=pulumi.Config().get("stageName"),
+        opts=pulumi.ResourceOptions(parent=rest_api)
     )
 
-    return rest_api.id, stage.invoke_url
+    return rest_api.id, stage.stage_name, stage.invoke_url
