@@ -14,10 +14,10 @@ class APIResourceFunction(BaseModel):
     filename: Optional[str]
     handler: str
     lambda_: Any
-    runtime: str = "nodejs16.x"
     allowed_path: str
+    runtime: str = "nodejs16.x"
     timeout: Optional[int] = 30
-    environment: Dict[str]
+    environment: Dict[str, str] = {}
     description: Optional[str] = ""
 
     @validator("filename", always=True)
@@ -32,7 +32,8 @@ class APIResourceDescription(BaseModel):
     is_root: bool = False
     type: str = "AWS_PROXY"
     methods: Dict[
-        Literal["GET", "POST", "UPDATE", "DELETE", "PUT"], APIResourceFunction
+        Literal["GET", "POST", "UPDATE", "DELETE", "PUT"],
+        APIResourceFunction
     ]
     description: Optional[str]
 
@@ -47,31 +48,55 @@ addTodo = APIResourceFunction(
     name="addTodo",
     allowed_path="*/POST/item",
     handler="app.addToDoItem",
+    environment={
+        "AWS_NODEJS_CONNECTION_REUSE_ENABLED": "1",
+        "ENDPOINT_OVERRIDE": ""
+    }
 )
 getAllTodo = APIResourceFunction(
     name="getAllTodo",
     allowed_path="*/GET/item",
     handler="app.getAllTodo",
+    environment={
+        "AWS_NODEJS_CONNECTION_REUSE_ENABLED": "1",
+        "ENDPOINT_OVERRIDE": ""
+    }
 )
 completeTodo = APIResourceFunction(
     name="completeTodo",
     allowed_path="*/POST/item/*/done",
     handler="app.completeTodo",
+    environment={
+        "AWS_NODEJS_CONNECTION_REUSE_ENABLED": "1",
+        "ENDPOINT_OVERRIDE": ""
+    }
 )
 getTodo = APIResourceFunction(
     name="getTodo",
     allowed_path="*/GET/item/*",
     handler="app.getTodo",
+    environment={
+        "AWS_NODEJS_CONNECTION_REUSE_ENABLED": "1",
+        "USE_DYNAMODB_LOCAL": "0",
+        "DYNAMODB_LOCAL_URI": ""
+    }
 )
 updateTodo = APIResourceFunction(
     name="updateTodo",
     allowed_path="*/PUT/item/*",
     handler="app.updateTodo",
+    environment={
+        "AWS_NODEJS_CONNECTION_REUSE_ENABLED": "1"
+    }
 )
 deleteTodo = APIResourceFunction(
     name="deleteTodo",
     allowed_path="*/DELETE/item/*",
     handler="app.deleteTodo",
+    environment={
+        "AWS_NODEJS_CONNECTION_REUSE_ENABLED": "1",
+        "ENDPOINT_OVERRIDE": ""
+    }
 )
 
 

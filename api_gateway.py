@@ -23,6 +23,7 @@ def _create_lambda_resource(
         runtime=api_function.runtime,
         handler=api_function.handler,
         description=api_function.description,
+        timeout=api_function.timeout,
         environment=api_function.environment
     )
 
