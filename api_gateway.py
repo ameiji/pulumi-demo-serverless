@@ -6,12 +6,11 @@ import pulumi_aws as aws
 from lambda_functions import create_lambda_function
 from cognito import create_cognito_authorizer
 from api import api_resources, APIResourceDescription, APIResourceFunction
+from app_config import config
 
 
 _integrations: List[pulumi.CustomResource] = []
 _resources: Dict[str, aws.apigateway.Resource] = {}
-
-config = pulumi.Config()
 project_name = config.require("projectName")
 
 def _create_lambda_resource(

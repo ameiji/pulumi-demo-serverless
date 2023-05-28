@@ -1,7 +1,7 @@
 import pulumi
 import pulumi_aws as aws
+from app_config import config
 
-config = pulumi.Config()
 project_name = config.require("projectName")
 
 def create_cognito_authorizer(

@@ -3,9 +3,10 @@ import os.path
 from pydantic import validator, BaseModel, ValidationError
 from collections import OrderedDict
 from typing import Optional, Dict, List, Literal, Any
+from app_config import config
 
 
-BACKEND_SRC_PATH = "./backend-src"
+backend_src_path = config.require("backendSRCPath")
 
 
 class APIResourceFunction(BaseModel):
@@ -21,7 +22,7 @@ class APIResourceFunction(BaseModel):
     def _filename_validator(cls, filename: Optional[str], values) -> str:
         if filename:
             return filename
-        return os.path.join(BACKEND_SRC_PATH, values["name"])
+        return os.path.join(backend_src_path, values["name"])
 
 
 class APIResourceDescription(BaseModel):

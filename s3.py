@@ -2,10 +2,9 @@ import pulumi
 import pulumi_aws as aws
 import pulumi_synced_folder as synced_folder
 from typing import List
+from app_config import config
 
 
-# Import the program's configuration settings.
-config = pulumi.Config()
 project_name = config.require("projectName")
 frontend_src_path = config.require("frontendSRCPath")
 index_document = config.get("indexDocument") or "index.html"
