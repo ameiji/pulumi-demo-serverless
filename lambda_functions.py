@@ -16,6 +16,7 @@ def create_lambda_function(
     filename: str,
     runtime: str,
     handler: str,
+    timeout: int,
     role_arn: str = DEFAULT_LAMBDA_ROLE_ARN,
     environment: Mapping[str, str] = None,
     description: Optional[str] = None,
@@ -27,6 +28,7 @@ def create_lambda_function(
         role=role_arn,
         handler=handler,
         code=pulumi.asset.AssetArchive({"folder": pulumi.FileArchive(filename)}),
+        timeout=timeout,
         description=description,
         environment=environment,
     )

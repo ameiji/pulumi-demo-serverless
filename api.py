@@ -13,9 +13,11 @@ class APIResourceFunction(BaseModel):
     name: str
     filename: Optional[str]
     handler: str
-    allowed_path: str
-    runtime: str = "nodejs16.x"
     lambda_: Any
+    runtime: str = "nodejs16.x"
+    allowed_path: str
+    timeout: Optional[int] = 30
+    environment: Dict[str]
     description: Optional[str] = ""
 
     @validator("filename", always=True)
