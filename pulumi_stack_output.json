@@ -1,10 +1,14 @@
 {
-  "aws_user_pool_id": "eu-west-1_Aj4mYxSZ3",
-  "aws_user_pools_web_client_id": "611ho6jt1cu4e1t0eecikm15mk",
-  "backend_invoke_url": "https://yi5yzqnlk4.execute-api.eu-west-1.amazonaws.com/demo",
+  "aws_user_pool_id": "eu-west-1_2bFecoMVL",
+  "aws_user_pools_web_client_id": "4df8l3gs4dtfcl2h6op93n2v07",
+  "backend_invoke_url": "https://ej2n72n99g.execute-api.eu-west-1.amazonaws.com/demo",
+  "cdnHostname": "d4e6ighrohlc.cloudfront.net",
+  "cdnURL": "https://d4e6ighrohlc.cloudfront.net",
   "cognito_custom_domain": "todoapi-pulumi-demo.auth.eu-west-1.amazoncognito.com",
-  "rest_api_id": "yi5yzqnlk4",
-  "s3_bucket_name": "todoapifrontendbucket-5a77fc4",
+  "originHostname": "todoapifrontendbucket-0a27814.s3-website-eu-west-1.amazonaws.com",
+  "originURL": "http://todoapifrontendbucket-0a27814.s3-website-eu-west-1.amazonaws.com",
+  "rest_api_id": "ej2n72n99g",
+  "s3_bucket_name": "todoapifrontendbucket-0a27814",
   "stage_name": "demo",
-  "website_url": "http://todoapifrontendbucket-5a77fc4.s3-website-eu-west-1.amazonaws.com"
+  "website_url": "https://d4e6ighrohlc.cloudfront.net"
 }

@@ -1,4 +1,6 @@
 config:
+  projectName: toDoAPI
+  frontendSRCPath: "./frontend-src/build"
   aws:region: eu-west-1
   aws:profile: aws-wtf
   aws:allowedAccountIds: [490876619407,474008963679]

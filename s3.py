@@ -1,79 +1,119 @@
-import json
-import mimetypes
-import os
-from pulumi import FileAsset, Output, ResourceOptions
-from pulumi_aws import s3
+import pulumi
+import pulumi_aws as aws
+import pulumi_synced_folder as synced_folder
+from typing import List
 
 
-FRONTEND_SRC_PATH = "./frontend-src/build"
+# Import the program's configuration settings.
+config = pulumi.Config()
+project_name = config.require("projectName")
+frontend_src_path = config.require("frontendSRCPath")
+index_document = config.get("indexDocument") or "index.html"
+error_document = config.get("errorDocument") or "error.html"
 
 
-def _public_read_policy_for_bucket(bucket_id: Output[str]) -> Output:
-    return Output.json_dumps(
-        {
-            "Version": "2012-10-17",
-            "Statement": [
-                {
-                    "Effect": "Allow",
-                    "Principal": "*",
-                    "Action": ["s3:GetObject"],
-                    "Resource": [
-                        Output.format("arn:aws:s3:::{0}/*", bucket_id),
-                    ],
-                    "Condition": {
-                        "IpAddress": {
-                            "aws:SourceIp": [
-                                "178.222.77.18/32",
-                            ]
-                        }
-                    }
-                }
-            ],
-        }
+def _create_s3_bucket() -> aws.s3.Bucket:
+
+    # Create an S3 bucket and configure it as a website.
+    bucket = aws.s3.Bucket(
+        f"{project_name}FrontendBucket",
+        website=aws.s3.BucketWebsiteArgs(
+            index_document=index_document,
+            error_document=error_document,
+        ),
     )
 
-def _upload_dir_to_s3(content_dir: str, bucket: s3.Bucket):
-    for root, _, files in os.walk(content_dir):
-        for file in files:
-            file_path = os.path.join(root, file)
-            relative_path = os.path.relpath(file_path, content_dir)
+    # Set ownership controls for the new bucket
+    ownership_controls = aws.s3.BucketOwnershipControls(
+        f"{project_name}BucketOwnershipControls",
+        bucket=bucket.bucket,
+        rule=aws.s3.BucketOwnershipControlsRuleArgs(
+            object_ownership="ObjectWriter",
+        )
+    )
 
-            if "index.html" in file_path:
-                content_type = "text/html"
-            elif ".css" in file_path:
-                content_type = "text/css"
-            elif ".json" in file_path or ".js" in file_path:
-                content_type = "application/javascript"
-            else:
-                content_type = None
+    # Configure public ACL block on the new bucket
+    public_access_block = aws.s3.BucketPublicAccessBlock(
+        f"{project_name}PublicAccessBlock",
+        bucket=bucket.bucket,
+        block_public_acls=False,
+    )
 
-            bucket_object = s3.BucketObject(
-                relative_path.replace("\\", "/"),
-                # Replace backslashes with forward slashes for Windows compatibility
-                bucket=bucket.id,
-                source=FileAsset(file_path),
-                acl="private",
-                content_type=content_type,
-                opts=ResourceOptions(parent=bucket)
+    # Use a synced folder to manage the files of the website.
+    bucket_folder = synced_folder.S3BucketFolder(
+        f"{project_name}BucketFolder",
+        acl="public-read",
+        bucket_name=bucket.bucket,
+        path=frontend_src_path,
+        opts=pulumi.ResourceOptions(depends_on=[
+            ownership_controls,
+            public_access_block
+        ])
+    )
+
+    return bucket
+
+
+def _create_cf_cdn(bucket: aws.s3.Bucket, allowed_methods: List[str]) -> aws.cloudfront.Distribution:
+
+    # Create a CloudFront CDN to distribute and cache the website.
+    cdn = aws.cloudfront.Distribution(
+        f"{project_name}CFDistribution",
+        enabled=True,
+        origins=[
+            aws.cloudfront.DistributionOriginArgs(
+                origin_id=bucket.arn,
+                domain_name=bucket.website_endpoint,
+                custom_origin_config=aws.cloudfront.DistributionOriginCustomOriginConfigArgs(
+                    origin_protocol_policy="http-only",
+                    http_port=80,
+                    https_port=443,
+                    origin_ssl_protocols=["TLSv1.2"],
+                ),
             )
-
-
-def _create_s3_bucket(bucket_name: str) -> s3.Bucket:
-    web_bucket = s3.Bucket(
-        bucket_name,
-        website=s3.BucketWebsiteArgs(index_document="index.html"),
+        ],
+        default_cache_behavior=aws.cloudfront.DistributionDefaultCacheBehaviorArgs(
+            target_origin_id=bucket.arn,
+            viewer_protocol_policy="redirect-to-https",
+            allowed_methods=allowed_methods,
+            cached_methods=[
+                "GET",
+                "HEAD",
+                "OPTIONS",
+            ],
+            default_ttl=600,
+            max_ttl=600,
+            min_ttl=600,
+            forwarded_values=aws.cloudfront.DistributionDefaultCacheBehaviorForwardedValuesArgs(
+                query_string=True,
+                cookies=aws.cloudfront.DistributionDefaultCacheBehaviorForwardedValuesCookiesArgs(
+                    forward="all",
+                ),
+            ),
+        ),
+        price_class="PriceClass_100",
+        custom_error_responses=[
+            aws.cloudfront.DistributionCustomErrorResponseArgs(
+                error_code=404,
+                response_code=404,
+                response_page_path=f"/{error_document}",
+            )
+        ],
+        restrictions=aws.cloudfront.DistributionRestrictionsArgs(
+            geo_restriction=aws.cloudfront.DistributionRestrictionsGeoRestrictionArgs(
+                restriction_type="none",
+            ),
+        ),
+        viewer_certificate=aws.cloudfront.DistributionViewerCertificateArgs(
+            cloudfront_default_certificate=True,
+        ),
+        opts=pulumi.ResourceOptions(depends_on=[bucket]),
     )
-    bucket_policy = s3.BucketPolicy(
-        f"{bucket_name}Policy",
-        bucket=web_bucket.id,
-        policy=_public_read_policy_for_bucket(web_bucket.id),
-        opts=ResourceOptions(depends_on=[web_bucket], parent=web_bucket),
-    )
-    return web_bucket
+    return cdn
 
 
-def upload_frontend() -> s3.Bucket:
-    bucket_name = "TodoAPIFrontendBucket"
-    web_bucket = _create_s3_bucket(bucket_name)
-    _upload_dir_to_s3(content_dir=FRONTEND_SRC_PATH, bucket=web_bucket)
-    return web_bucket
+def upload_frontend() -> aws.s3.Bucket:
+    allowed_methods = ["GET", "HEAD", "POST", "DELETE", "PUT", "PATCH", "OPTIONS"]
+    s3_bucket = _create_s3_bucket()
+    cdn = _create_cf_cdn(bucket=s3_bucket, allowed_methods=allowed_methods)
+    return cdn, s3_bucket

@@ -3,9 +3,11 @@ import pulumi
 import pulumi_aws as aws
 from iam import create_lambda_exec_role
 
+config = pulumi.Config()
+project_name = config.require("projectName")
 
 DEFAULT_LAMBDA_ROLE_ARN = create_lambda_exec_role(
-    "lambda-exec-role", assume_policy_filename="lambdas/execution_role.json"
+    f"{project_name}LambdaExecRole", assume_policy_filename="lambdas/execution_role.json"
 )
 
 

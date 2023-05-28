@@ -11,6 +11,8 @@ from api import api_resources, APIResourceDescription, APIResourceFunction
 _integrations: List[pulumi.CustomResource] = []
 _resources: Dict[str, aws.apigateway.Resource] = {}
 
+config = pulumi.Config()
+project_name = config.require("projectName")
 
 def _create_lambda_resource(
     api_function: APIResourceFunction, rest_api: aws.apigateway.RestApi
@@ -34,8 +36,6 @@ def _create_lambda_resource(
         ),
         opts=pulumi.ResourceOptions(parent=rest_api),
     )
-
-    # AWS GW Authorizer resource.
 
     return lambda_
 
