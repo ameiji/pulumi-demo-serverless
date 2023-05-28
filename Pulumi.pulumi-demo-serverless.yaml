@@ -2,6 +2,7 @@ config:
   projectName: toDoAPI
   frontendSRCPath: "./frontend-src/build"
   backendSRCPath: "./backend-src"
+  stageName: demo
   aws:region: eu-west-1
   aws:profile: aws-wtf
   aws:allowedAccountIds: [490876619407,474008963679]
@@ -11,7 +12,6 @@ config:
       Owner: "psalnikov dsarkisov"
       Env: demo
   pulumi:template: aws-python
-  stageName: demo
 #  boundaryPolicy: "arn:aws:iam::474008963679:policy/DefaultBoundaryPolicy"
 
 
