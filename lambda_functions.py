@@ -30,6 +30,6 @@ def create_lambda_function(
         code=pulumi.asset.AssetArchive({"folder": pulumi.FileArchive(filename)}),
         timeout=timeout,
         description=description,
-        environment=environment,
+        environment={"variables": environment},
     )
     return func

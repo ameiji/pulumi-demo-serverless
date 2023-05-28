@@ -32,7 +32,9 @@ def _create_role(
 def create_lambda_exec_role(
     name, assume_policy_filename: str, policy_filenames: Optional[list[str]] = None
 ) -> pulumi.Output[str]:
+
     policy_args: list[RoleInlinePolicyArgs] = []
+
     if policy_filenames:
         for policy_file in policy_filenames:
             json_string = _load_json_from_file(policy_file)
@@ -42,3 +44,28 @@ def create_lambda_exec_role(
         name, assume_role_policy_json=_load_json_from_file(assume_policy_filename)
     ).arn
 
+
+def create_lambda_dynamodb_policy(dynamodb_table_arn: str):
+    policy = """{
+    "Statement": [
+        {
+            "Action": [
+                "dynamodb:BatchGetItem"
+                "dynamodb:BatchWriteItem"
+                "dynamodb:ConditionCheckItem"
+                "dynamodb:DeleteItem"
+                "dynamodb:DescribeTable"
+                "dynamodb:GetItem"
+                "dynamodb:PutItem"
+                "dynamodb:Query"
+                "dynamodb:Scan"
+                "dynamodb:UpdateItem"
+            ],
+            "Resource": [
+                "{dynamodb_table_arn}",
+                "{dynamodb_table_arn}/index/*"
+            ],
+            "Effect": "Allow"
+        }
+    ]
+}""".format(dynamodb_table_arn)

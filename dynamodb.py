@@ -14,7 +14,7 @@ DYNAMODB_ATTRS = "./dynamodb/attributes.json"
 
 
 def _load_attributes_from_file(filename: str) -> list[dict]:
-    with open(filename, "r") as f:
+    with open(filename, "r", encoding="utf-8") as f:
         attributes = json.load(f)
     return attributes
 
@@ -70,7 +70,16 @@ def get_key(key_type: str) -> str:
             return attribute["name"]
 
 
-def create_dynamodb_table(
+def get_dynamodb_table_attributes() -> Sequence[aws.dynamodb.TableAttributeArgs]:
+    attributes_list = _load_attributes_from_file(DYNAMODB_ATTRS)
+    result = []
+    for attribute in attributes_list:
+        result.append(
+            _create_dynamodb_table_attribute_args(attribute["name"], attribute["type"])
+        )
+    return result
+
+def _create_dynamodb_table(
     table_name: str,
     attributes: Sequence[aws.dynamodb.TableAttributeArgs],
     hash_key: str,
@@ -79,6 +88,12 @@ def create_dynamodb_table(
         Sequence[aws.dynamodb.TableGlobalSecondaryIndexArgs]
     ] = None,
 ) -> aws.dynamodb.Table:
+    _attributes: Sequence[aws.dynamodb.TableAttributeArgs] = []
+    for attr in attributes:
+        _attributes.append(
+            aws.dynamodb.TableAttributeArgs(name=attr["name"], type=attr["type"])
+        )
+
     if secondary_indexes is None:
         secondary_indexes = []
     dynamodb_table = aws.dynamodb.Table(
@@ -101,11 +116,14 @@ def create_dynamodb_table(
     return dynamodb_table
 
 
-def get_dynamodb_table_attributes() -> Sequence[aws.dynamodb.TableAttributeArgs]:
-    attributes_list = _load_attributes_from_file(DYNAMODB_ATTRS)
-    result = []
-    for attribute in attributes_list:
-        result.append(
-            _create_dynamodb_table_attribute_args(attribute["name"], attribute["type"])
-        )
-    return result
+def create_todo_table(table_name: str) -> aws.dynamodb.Table:
+    todo_table = _create_dynamodb_table(
+        table_name=table_name,
+        hash_key="cognito-username",
+        range_key="id",
+        attributes=[
+            {"name": "cognito-username", "type": "S"},
+            {"name": "id", "type": "S"},
+        ],
+    )
+    return todo_table

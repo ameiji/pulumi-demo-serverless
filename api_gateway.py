@@ -1,6 +1,6 @@
 import hashlib
 import json
-from typing import Dict, Tuple, List, Any
+from typing import Dict, Tuple, List, Any, Optional
 import pulumi
 import pulumi_aws as aws
 from lambda_functions import create_lambda_function
@@ -14,9 +14,17 @@ _resources: Dict[str, aws.apigateway.Resource] = {}
 project_name = config.require("projectName")
 
 def _create_lambda_resource(
-    api_function: APIResourceFunction, rest_api: aws.apigateway.RestApi
+    api_function: APIResourceFunction,
+    rest_api: aws.apigateway.RestApi,
+    environment: Optional[Dict[str, str]] = None
 ) -> aws.lambda_.Function:
+
     # AWS Lambda
+    _environment = api_function.environment
+
+    if environment:
+        _environment.update(environment)
+
     lambda_ = create_lambda_function(
         name=api_function.name,
         filename=api_function.filename,
@@ -24,7 +32,7 @@ def _create_lambda_resource(
         handler=api_function.handler,
         description=api_function.description,
         timeout=api_function.timeout,
-        environment=api_function.environment
+        environment=_environment
     )
 
     lambda_permission = aws.lambda_.Permission(
@@ -46,11 +54,12 @@ def _create_resource(
     path: str,
     api_resource: APIResourceDescription,
     authorizer: aws.apigateway.Authorizer,
+    lambda_environment: Optional[Dict[str, str]] = None
 ):
     path_part = path.split("/")[-1]
 
     for method, api_function in api_resource.methods.items():
-        lambda_ = _create_lambda_resource(api_function, rest_api)
+        lambda_ = _create_lambda_resource(api_function, rest_api, environment=lambda_environment)
         api_resource.methods[method].lambda_ = lambda_
 
     # API GW Resource
@@ -102,7 +111,7 @@ def _create_resource(
         _integrations.append(integration)
 
 
-def create_api_gateway(redirect_url: pulumi.Output[str]) -> Tuple[pulumi.Output]:
+def create_api_gateway(redirect_url: pulumi.Output[str], lambda_environment: Optional[Dict[str, str]] = None) -> Tuple[pulumi.Output]:
     # API Gateway
     rest_api_name = "workshopServerlessJukeBox"
     rest_api = aws.apigateway.RestApi(rest_api_name)
@@ -116,6 +125,7 @@ def create_api_gateway(redirect_url: pulumi.Output[str]) -> Tuple[pulumi.Output]
             path=resource_path,
             api_resource=resource,
             authorizer=cognito_authorizer,
+            lambda_environment=lambda_environment
         )
 
     # API GW Deployment

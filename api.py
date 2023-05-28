@@ -1,8 +1,8 @@
 import sys
 import os.path
-from pydantic import validator, BaseModel, ValidationError
 from collections import OrderedDict
-from typing import Optional, Dict, List, Literal, Any
+from typing import Optional, Dict, Literal, Any
+from pydantic import validator, BaseModel, ValidationError
 from app_config import config
 
 

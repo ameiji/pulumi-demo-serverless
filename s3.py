@@ -1,7 +1,7 @@
+from typing import List
 import pulumi
 import pulumi_aws as aws
 import pulumi_synced_folder as synced_folder
-from typing import List
 from app_config import config
 
 
