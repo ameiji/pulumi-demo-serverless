@@ -101,13 +101,13 @@ def _create_resource(
         _integrations.append(integration)
 
 
-def create_api_gateway() -> Tuple[pulumi.Output]:
+def create_api_gateway(redirect_url: pulumi.Output[str]) -> Tuple[pulumi.Output]:
     # API Gateway
     rest_api_name = "workshopServerlessJukeBox"
     rest_api = aws.apigateway.RestApi(rest_api_name)
 
     # API GW Cognito authorizer
-    cognito_authorizer = create_cognito_authorizer(rest_api)
+    cognito_authorizer = create_cognito_authorizer(rest_api=rest_api, redirect_url=redirect_url)
 
     for resource_path, resource in api_resources.items():
         _create_resource(

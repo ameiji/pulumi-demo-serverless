@@ -1,9 +1,10 @@
 {
+  "aws_user_pool_id": "eu-west-1_Aj4mYxSZ3",
   "aws_user_pools_web_client_id": "611ho6jt1cu4e1t0eecikm15mk",
   "backend_invoke_url": "https://yi5yzqnlk4.execute-api.eu-west-1.amazonaws.com/demo",
   "cognito_custom_domain": "todoapi-pulumi-demo.auth.eu-west-1.amazoncognito.com",
   "rest_api_id": "yi5yzqnlk4",
   "s3_bucket_name": "todoapifrontendbucket-5a77fc4",
   "stage_name": "demo",
-  "website_url": "todoapifrontendbucket-5a77fc4.s3-website-eu-west-1.amazonaws.com"
+  "website_url": "http://todoapifrontendbucket-5a77fc4.s3-website-eu-west-1.amazonaws.com"
 }

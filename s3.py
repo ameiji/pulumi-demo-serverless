@@ -8,6 +8,30 @@ from pulumi_aws import s3
 FRONTEND_SRC_PATH = "./frontend-src/build"
 
 
+def _public_read_policy_for_bucket(bucket_id: Output[str]) -> Output:
+    return Output.json_dumps(
+        {
+            "Version": "2012-10-17",
+            "Statement": [
+                {
+                    "Effect": "Allow",
+                    "Principal": "*",
+                    "Action": ["s3:GetObject"],
+                    "Resource": [
+                        Output.format("arn:aws:s3:::{0}/*", bucket_id),
+                    ],
+                    "Condition": {
+                        "IpAddress": {
+                            "aws:SourceIp": [
+                                "178.222.77.18/32",
+                            ]
+                        }
+                    }
+                }
+            ],
+        }
+    )
+
 def _upload_dir_to_s3(content_dir: str, bucket: s3.Bucket):
     for root, _, files in os.walk(content_dir):
         for file in files:
@@ -32,31 +56,6 @@ def _upload_dir_to_s3(content_dir: str, bucket: s3.Bucket):
                 content_type=content_type,
                 opts=ResourceOptions(parent=bucket)
             )
-
-
-def _public_read_policy_for_bucket(bucket_id: Output[str]) -> Output:
-    return Output.json_dumps(
-        {
-            "Version": "2012-10-17",
-            "Statement": [
-                {
-                    "Effect": "Allow",
-                    "Principal": "*",
-                    "Action": ["s3:GetObject"],
-                    "Resource": [
-                        Output.format("arn:aws:s3:::{0}/*", bucket_id),
-                    ],
-                    "Condition": {
-                        "IpAddress": {
-                            "aws:SourceIp": [
-                                "79.140.150.128/32",
-                            ]
-                        }
-                    }
-                }
-            ],
-        }
-    )
 
 
 def _create_s3_bucket(bucket_name: str) -> s3.Bucket:

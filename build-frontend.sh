@@ -15,10 +15,12 @@ REDIRECT_URL=$( cat pulumi_stack_output.json | jq '.website_url')
 
 BUILD_DIR=/tmp/build
 
+mkdir -p "$BUILD_DIR"
+
+rm -rf frontend-src/build
 cp -rv frontend-src "$BUILD_DIR"
 
 pushd "$BUILD_DIR/frontend-src"
-
 cp -fv src/config.default.js src/config.js
 
 npm install
@@ -40,6 +42,5 @@ fi
 npm run build
 popd
 
-rm -rf frontend-src/build/
 cp -rv "$BUILD_DIR/frontend-src/build" frontend-src/
 
