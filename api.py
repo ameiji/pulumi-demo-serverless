@@ -101,13 +101,30 @@ deleteTodo = APIResourceFunction(
     }
 )
 
-mockFunction = APIResourceFunction(
-    name="mockOptions",
+mockItem = APIResourceFunction(
+    name="mockItem",
     allowed_path="*/OPTIONS/item",
     authorization="NONE",
     integration_type="MOCK",
     integration_method="OPTIONS"
 )
+
+mockItemId = APIResourceFunction(
+    name="mockItemId",
+    allowed_path="*/OPTIONS/item/*",
+    authorization="NONE",
+    integration_type="MOCK",
+    integration_method="OPTIONS"
+)
+
+mockItemDoneId = APIResourceFunction(
+    name="mockItemDoneId",
+    allowed_path="*/OPTIONS/item/*/done",
+    authorization="NONE",
+    integration_type="MOCK",
+    integration_method="OPTIONS"
+)
+
 
 try:
     api_resources = OrderedDict(
@@ -117,17 +134,21 @@ try:
                 is_root=True,
                 methods={"GET": getAllTodo,
                          "POST": addTodo,
-                         "OPTIONS": mockFunction}
+                         "OPTIONS": mockItem}
             ),
             "/item/{id}": APIResourceDescription(
                 name="itemId",
                 methods={"GET": getTodo,
                          "PUT": updateTodo,
-                         "DELETE": deleteTodo},
+                         "DELETE": deleteTodo,
+                         "OPTIONS": mockItemId},
             ),
             "/item/{id}/done": APIResourceDescription(
                 name="itemIdDone",
-                methods={"POST": completeTodo}
+                methods={
+                    "POST": completeTodo,
+                    "OPTIONS": mockItemDoneId
+                }
             ),
         }
     )

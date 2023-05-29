@@ -59,11 +59,19 @@ def _create_integration_response(
     http_method: str,
 ):
     response200 = aws.apigateway.MethodResponse(
-        "response200",
+        f"{name}Response200",
         rest_api=rest_api.id,
         resource_id=api_resource.id,
         http_method=http_method,
         status_code="200",
+        response_parameters={
+            "method.response.header.Access-Control-Allow-Origin": True,
+            "method.response.header.Access-Control-Allow-Methods": True,
+            "method.response.header.Access-Control-Allow-Headers": True
+        },
+        opts=pulumi.ResourceOptions(
+            parent=api_integration, depends_on=[api_integration]
+        ),
     )
     my_demo_integration_response = aws.apigateway.IntegrationResponse(
         f"{name}IntegrationResponse",
@@ -72,13 +80,13 @@ def _create_integration_response(
         http_method=http_method,
         status_code=response200.status_code,
         response_templates={"application/json": "{}\n"},
-        # response_parameters={
-        #     "method.response.header.Access-Control-Allow-Origin": "'*'",
-        #     "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,HEAD,GET,PUT,POST,DELETE'",
-        #     "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
-        # },
+        response_parameters={
+            "method.response.header.Access-Control-Allow-Origin": "'*'",
+            "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,HEAD,GET,PUT,POST,DELETE'",
+            "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+        },
         opts=pulumi.ResourceOptions(
-            parent=api_integration, depends_on=[api_integration]
+            parent=api_integration, depends_on=[api_integration, response200]
         ),
     )
 
