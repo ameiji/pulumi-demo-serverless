@@ -10,7 +10,7 @@ project_name = config.require("projectName")
 
 
 def create_lambda_dynamodb_policy(name: str, dynamodb_table_arn: pulumi.Output[str]) -> aws.iam.RoleInlinePolicyArgs:
-    policy = json.dumps({
+    policy = pulumi.Output.json_dumps({
                 "Statement": [
                     {
                         "Action": [
@@ -26,14 +26,13 @@ def create_lambda_dynamodb_policy(name: str, dynamodb_table_arn: pulumi.Output[s
                             "dynamodb:UpdateItem"
                         ],
                         "Resource": [
-                            f"{dynamodb_table_arn}",
+                            dynamodb_table_arn,
                             f"{dynamodb_table_arn}/index/*"
                         ],
                         "Effect": "Allow"
                     }
-                ]}
-    )
-    return aws.iam.RoleInlinePolicyArgs(name, policy)
+                ]})
+    return aws.iam.RoleInlinePolicyArgs(name=name, policy=policy)
 
 
 def create_lambda_function(
