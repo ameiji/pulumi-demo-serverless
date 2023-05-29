@@ -14,20 +14,20 @@ def create_lambda_dynamodb_policy(name: str, dynamodb_table_arn: pulumi.Output[s
                 "Statement": [
                     {
                         "Action": [
-                            "dynamodb:BatchGetItem"
-                            "dynamodb:BatchWriteItem"
-                            "dynamodb:ConditionCheckItem"
-                            "dynamodb:DeleteItem"
-                            "dynamodb:DescribeTable"
-                            "dynamodb:GetItem"
-                            "dynamodb:PutItem"
-                            "dynamodb:Query"
-                            "dynamodb:Scan"
+                            "dynamodb:BatchGetItem",
+                            "dynamodb:BatchWriteItem",
+                            "dynamodb:ConditionCheckItem",
+                            "dynamodb:DeleteItem",
+                            "dynamodb:DescribeTable",
+                            "dynamodb:GetItem",
+                            "dynamodb:PutItem",
+                            "dynamodb:Query",
+                            "dynamodb:Scan",
                             "dynamodb:UpdateItem"
                         ],
                         "Resource": [
                             dynamodb_table_arn,
-                            f"{dynamodb_table_arn}/index/*"
+                            pulumi.Output.format("{0}/index/*", dynamodb_table_arn)
                         ],
                         "Effect": "Allow"
                     }
