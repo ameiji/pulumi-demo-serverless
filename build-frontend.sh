@@ -6,6 +6,13 @@ set -eux
 gpulumi="$HOME/Downloads/pulumi/pulumi"
 
 
+# Create build dir
+BUILD_DIR=/tmp/build
+mkdir -p "$BUILD_DIR"
+rm -rf frontend-src/build
+cp -rv frontend-src "$BUILD_DIR"
+
+
 # Get stack outputs
 $gpulumi stack output -j > pulumi_stack_output.json
 
@@ -15,11 +22,6 @@ STAGE_NAME_PARAM=$( cat pulumi_stack_output.json | jq '.stage_name')
 COGNITO_HOSTED_DOMAIN=$( cat pulumi_stack_output.json | jq '.cognito_custom_domain')
 REDIRECT_URL=$( cat pulumi_stack_output.json | jq '.website_url')
 
-# Create build dir
-BUILD_DIR=/tmp/build
-mkdir -p "$BUILD_DIR"
-rm -rf frontend-src/build
-cp -rv frontend-src "$BUILD_DIR"
 
 # Copy config
 pushd "$BUILD_DIR/frontend-src"
@@ -50,3 +52,4 @@ cp -rv "$BUILD_DIR/frontend-src/build" frontend-src/
 
 echo "=> Build complete"
 echo "=> Now you can run 'pulumi up' to upload frontend app sources to S3."
+
