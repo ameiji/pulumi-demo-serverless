@@ -19,10 +19,10 @@ def create_lambda_exec_role(
     name: str,
     assume_policy_filename: str,
     policy_filenames: Optional[list[str]] = None,
-    policy_args: Optional[Sequence[RoleInlinePolicyArgs]] = None,
+    policy_args: Optional[Sequence[RoleInlinePolicyArgs]] = [],
 ) -> pulumi.Output[str]:
 
-    policy_args: list[RoleInlinePolicyArgs] = []
+    # policy_args: list[RoleInlinePolicyArgs] = []
 
     if policy_filenames:
         for policy_file in policy_filenames:

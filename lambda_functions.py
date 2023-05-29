@@ -4,7 +4,6 @@ import pulumi
 import pulumi_aws as aws
 from app_config import config
 from iam import create_lambda_exec_role
-from dynamodb import create_todo_table
 
 
 project_name = config.require("projectName")
@@ -34,7 +33,7 @@ def create_lambda_dynamodb_policy(name: str, dynamodb_table_arn: pulumi.Output[s
                     }
                 ]}
     )
-    return aws.iam.RoleInlinePolicyArgs(name=name, policy=policy)
+    return aws.iam.RoleInlinePolicyArgs(name, policy)
 
 
 def create_lambda_function(
