@@ -12,13 +12,16 @@ backend_src_path = config.require("backendSRCPath")
 class APIResourceFunction(BaseModel):
     name: str
     filename: Optional[str]
-    handler: str
+    handler: Optional[str]
     lambda_: Any
+    authorization: Literal["COGNITO_USER_POOLS", "NONE"] = "COGNITO_USER_POOLS"
     allowed_path: str
     runtime: str = "nodejs16.x"
     timeout: Optional[int] = 30
     environment: Dict[str, str] = {}
     description: Optional[str] = ""
+    integration_type: Literal["HTTP", "AWS", "AWS_PROXY", "MOCK"] = "AWS_PROXY"
+    integration_method: Literal["GET", "POST", "PUT", "DELETE", "HEAD", "OPTIONS", "ANY", "PATCH"] = "POST"  # For Lambdas it is always POST
 
     @validator("filename", always=True)
     def _filename_validator(cls, filename: Optional[str], values) -> str:
@@ -30,9 +33,8 @@ class APIResourceFunction(BaseModel):
 class APIResourceDescription(BaseModel):
     name: str
     is_root: bool = False
-    type: str = "AWS_PROXY"
     methods: Dict[
-        Literal["GET", "POST", "UPDATE", "DELETE", "PUT"],
+        Literal["GET", "POST", "UPDATE", "DELETE", "PUT", "OPTIONS"],
         APIResourceFunction
     ]
     description: Optional[str]
@@ -99,6 +101,13 @@ deleteTodo = APIResourceFunction(
     }
 )
 
+mockFunction = APIResourceFunction(
+    name="mockOptions",
+    allowed_path="*/OPTIONS/item",
+    authorization="NONE",
+    integration_type="MOCK",
+    integration_method="OPTIONS"
+)
 
 try:
     api_resources = OrderedDict(
@@ -107,7 +116,8 @@ try:
                 name="item",
                 is_root=True,
                 methods={"GET": getAllTodo,
-                         "POST": addTodo}
+                         "POST": addTodo,
+                         "OPTIONS": mockFunction}
             ),
             "/item/{id}": APIResourceDescription(
                 name="itemId",

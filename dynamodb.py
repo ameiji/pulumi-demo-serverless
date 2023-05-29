@@ -91,23 +91,23 @@ def _create_dynamodb_table(
 
     if secondary_indexes is None:
         secondary_indexes = []
-    dynamodb_table = aws.dynamodb.Table(
-        table_name,
-        name=table_name,
-        tags={
-            "Name": table_name,
-        },
-        ttl=aws.dynamodb.TableTtlArgs(
-            attribute_name="TimeToExist",
-            enabled=False,
-        ),
-        read_capacity=20,
-        write_capacity=20,
-        attributes=attributes,
-        global_secondary_indexes=secondary_indexes,
-        hash_key=hash_key,
-        range_key=range_key,
-    )
+        dynamodb_table = aws.dynamodb.Table(
+            table_name,
+            name=table_name,
+            tags={
+                "Name": table_name,
+            },
+            # ttl=aws.dynamodb.TableTtlArgs(
+            #     attribute_name="TimeToExist",
+            #     enabled=False,
+            # ),
+            read_capacity=20,
+            write_capacity=20,
+            attributes=attributes,
+            global_secondary_indexes=secondary_indexes,
+            hash_key=hash_key,
+            range_key=range_key,
+        )
     return dynamodb_table
 
 
