@@ -10,6 +10,7 @@ from app_config import config
 
 
 _integrations: List[pulumi.CustomResource] = []
+_integration_responses: List[pulumi.CustomResource] = []
 _resources: Dict[str, aws.apigateway.Resource] = {}
 project_name = config.require("projectName")
 
@@ -67,13 +68,11 @@ def _create_integration_response(
         response_parameters={
             "method.response.header.Access-Control-Allow-Origin": True,
             "method.response.header.Access-Control-Allow-Methods": True,
-            "method.response.header.Access-Control-Allow-Headers": True
+            "method.response.header.Access-Control-Allow-Headers": True,
         },
-        opts=pulumi.ResourceOptions(
-            parent=api_integration, depends_on=[api_integration]
-        ),
+        opts=pulumi.ResourceOptions(parent=api_integration, depends_on=api_integration),
     )
-    my_demo_integration_response = aws.apigateway.IntegrationResponse(
+    integration_response = aws.apigateway.IntegrationResponse(
         f"{name}IntegrationResponse",
         rest_api=rest_api.id,
         resource_id=api_resource.id,
@@ -83,12 +82,13 @@ def _create_integration_response(
         response_parameters={
             "method.response.header.Access-Control-Allow-Origin": "'*'",
             "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,HEAD,GET,PUT,POST,DELETE'",
-            "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+            "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
         },
         opts=pulumi.ResourceOptions(
             parent=api_integration, depends_on=[api_integration, response200]
         ),
     )
+    return integration_response
 
 
 def _create_api_resource(
@@ -169,13 +169,15 @@ def _create_api_resource(
         )
 
         if api_function.integration_type == "MOCK":
-            _create_integration_response(
-                name=f"{api_resource.name}{api_resource_method}Mock",
+            integration_response = _create_integration_response(
+                name=f"{api_resource.name}Mock",
                 rest_api=rest_api,
                 api_resource=resource,
                 api_integration=integration,
                 http_method=api_resource_method,
             )
+            _integration_responses.append(integration_response)
+
         _integrations.append(integration)
 
 
@@ -183,7 +185,7 @@ def create_api_gateway(
     redirect_url: pulumi.Output[str],
     lambda_policies: list[aws.iam.RoleInlinePolicyArgs],
     lambda_environment: Optional[Dict[str, str]] = None,
-) -> Tuple[pulumi.Output]:
+) -> Tuple[pulumi.Output[str]]:
     # API Gateway
     rest_api_name = "workshopServerlessJukeBox"
     rest_api = aws.apigateway.RestApi(rest_api_name)

@@ -12,7 +12,6 @@ mkdir -p "$BUILD_DIR"
 rm -rf frontend-src/build
 cp -rv frontend-src "$BUILD_DIR"
 
-
 # Get stack outputs
 $gpulumi stack output -j > pulumi_stack_output.json
 
@@ -22,6 +21,7 @@ STAGE_NAME_PARAM=$( cat pulumi_stack_output.json | jq '.stage_name')
 COGNITO_HOSTED_DOMAIN=$( cat pulumi_stack_output.json | jq '.cognito_custom_domain')
 REDIRECT_URL=$( cat pulumi_stack_output.json | jq '.website_url')
 
+rm pulumi_stack_output.json
 
 # Copy config
 pushd "$BUILD_DIR/frontend-src"

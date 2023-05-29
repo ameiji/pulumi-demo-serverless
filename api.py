@@ -145,10 +145,8 @@ try:
             ),
             "/item/{id}/done": APIResourceDescription(
                 name="itemIdDone",
-                methods={
-                    "POST": completeTodo,
-                    "OPTIONS": mockItemDoneId
-                }
+                methods={"POST": completeTodo,
+                         "OPTIONS": mockItemDoneId}
             ),
         }
     )
