@@ -4,6 +4,7 @@ from app_config import config
 
 project_name = config.require("projectName")
 
+
 def create_cognito_authorizer(
     rest_api: aws.apigateway.RestApi,
     redirect_url: pulumi.Output[str]
@@ -26,13 +27,15 @@ def create_cognito_authorizer(
         allowed_oauth_flows_user_pool_client=True,
         allowed_oauth_scopes=["phone", "email", "openid"],
         allowed_oauth_flows=["code", "implicit"],
-        generate_secret=False
+        generate_secret=False,
+        opts=pulumi.ResourceOptions(parent=user_pool),
     )
 
     user_pool_domain = aws.cognito.UserPoolDomain(
         f"{project_name}UserPoolDomain",
         domain="todoapi-pulumi-demo",
-        user_pool_id=user_pool.id
+        user_pool_id=user_pool.id,
+        opts=pulumi.ResourceOptions(parent=user_pool),
     )
 
     # Create the Authorizer resource.
@@ -43,7 +46,7 @@ def create_cognito_authorizer(
         type="COGNITO_USER_POOLS",
         identity_source="method.request.header.Authorization",
         provider_arns=[user_pool.arn],
-        opts=pulumi.ResourceOptions(depends_on=[rest_api]),
+        opts=pulumi.ResourceOptions(depends_on=[rest_api], parent=rest_api),
     )
     pulumi.export("aws_user_pool_id", user_pool.id)
     pulumi.export("aws_user_pools_web_client_id", user_pool_client.id)

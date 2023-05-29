@@ -13,9 +13,11 @@ _integrations: List[pulumi.CustomResource] = []
 _resources: Dict[str, aws.apigateway.Resource] = {}
 project_name = config.require("projectName")
 
+
 def _create_lambda_resource(
     api_function: APIResourceFunction,
     rest_api: aws.apigateway.RestApi,
+    lambda_policies: list[aws.iam.RoleInlinePolicyArgs],
     environment: Optional[Dict[str, str]] = None
 ) -> aws.lambda_.Function:
 
@@ -32,6 +34,7 @@ def _create_lambda_resource(
         handler=api_function.handler,
         description=api_function.description,
         timeout=api_function.timeout,
+        lambda_policies=lambda_policies,
         environment=_environment
     )
 
@@ -54,12 +57,13 @@ def _create_resource(
     path: str,
     api_resource: APIResourceDescription,
     authorizer: aws.apigateway.Authorizer,
+    lambda_policies: list[aws.iam.RoleInlinePolicyArgs],
     lambda_environment: Optional[Dict[str, str]] = None
 ):
     path_part = path.split("/")[-1]
 
     for method, api_function in api_resource.methods.items():
-        lambda_ = _create_lambda_resource(api_function, rest_api, environment=lambda_environment)
+        lambda_ = _create_lambda_resource(api_function, rest_api, lambda_policies=lambda_policies, environment=lambda_environment)
         api_resource.methods[method].lambda_ = lambda_
 
     # API GW Resource
@@ -111,7 +115,10 @@ def _create_resource(
         _integrations.append(integration)
 
 
-def create_api_gateway(redirect_url: pulumi.Output[str], lambda_environment: Optional[Dict[str, str]] = None) -> Tuple[pulumi.Output]:
+def create_api_gateway(redirect_url: pulumi.Output[str],
+                       lambda_policies: list[aws.iam.RoleInlinePolicyArgs],
+                       lambda_environment: Optional[Dict[str, str]] = None,
+                       ) -> Tuple[pulumi.Output]:
     # API Gateway
     rest_api_name = "workshopServerlessJukeBox"
     rest_api = aws.apigateway.RestApi(rest_api_name)
@@ -119,12 +126,14 @@ def create_api_gateway(redirect_url: pulumi.Output[str], lambda_environment: Opt
     # API GW Cognito authorizer
     cognito_authorizer = create_cognito_authorizer(rest_api=rest_api, redirect_url=redirect_url)
 
+    # API Resources
     for resource_path, resource in api_resources.items():
         _create_resource(
             rest_api=rest_api,
             path=resource_path,
             api_resource=resource,
             authorizer=cognito_authorizer,
+            lambda_policies=lambda_policies,
             lambda_environment=lambda_environment
         )
 

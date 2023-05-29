@@ -28,7 +28,8 @@ def _create_s3_bucket() -> aws.s3.Bucket:
         bucket=bucket.bucket,
         rule=aws.s3.BucketOwnershipControlsRuleArgs(
             object_ownership="ObjectWriter",
-        )
+        ),
+        opts=pulumi.ResourceOptions(parent=bucket),
     )
 
     # Configure public ACL block on the new bucket
@@ -36,6 +37,7 @@ def _create_s3_bucket() -> aws.s3.Bucket:
         f"{project_name}PublicAccessBlock",
         bucket=bucket.bucket,
         block_public_acls=False,
+        opts=pulumi.ResourceOptions(parent=bucket),
     )
 
     # Use a synced folder to manage the files of the website.
@@ -44,10 +46,9 @@ def _create_s3_bucket() -> aws.s3.Bucket:
         acl="public-read",
         bucket_name=bucket.bucket,
         path=frontend_src_path,
-        opts=pulumi.ResourceOptions(depends_on=[
-            ownership_controls,
-            public_access_block
-        ])
+        opts=pulumi.ResourceOptions(depends_on=[ownership_controls,
+                                                public_access_block],
+                                    parent=bucket)
     )
 
     return bucket

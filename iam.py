@@ -1,6 +1,7 @@
 from typing import Sequence, Optional
 import pulumi
 from pulumi_aws.iam import Role, RoleInlinePolicyArgs
+from app_config import config
 
 
 def _load_json_from_file(filename: str) -> str:
@@ -14,23 +15,11 @@ def _get_inline_policy_args(json_string: str) -> RoleInlinePolicyArgs:
     return policy
 
 
-def _create_role(
-    name: str,
-    assume_role_policy_json: str,
-    policy_args: Optional[Sequence[RoleInlinePolicyArgs]] = None,
-) -> Role:
-    boundary_policy = pulumi.Config().get("boundaryPolicy")
-    return Role(
-        name,
-        name=name,
-        assume_role_policy=assume_role_policy_json,
-        inline_policies=policy_args,
-        permissions_boundary=boundary_policy,
-    )
-
-
 def create_lambda_exec_role(
-    name, assume_policy_filename: str, policy_filenames: Optional[list[str]] = None
+    name: str,
+    assume_policy_filename: str,
+    policy_filenames: Optional[list[str]] = None,
+    policy_args: Optional[Sequence[RoleInlinePolicyArgs]] = None,
 ) -> pulumi.Output[str]:
 
     policy_args: list[RoleInlinePolicyArgs] = []
@@ -40,32 +29,26 @@ def create_lambda_exec_role(
             json_string = _load_json_from_file(policy_file)
             policy_args.append(_get_inline_policy_args(json_string))
 
-    return _create_role(
-        name, assume_role_policy_json=_load_json_from_file(assume_policy_filename)
+    return create_iam_role(
+        name,
+        assume_role_policy_json=_load_json_from_file(assume_policy_filename),
+        policy_args=policy_args
     ).arn
 
 
-def create_lambda_dynamodb_policy(dynamodb_table_arn: str):
-    policy = """{
-    "Statement": [
-        {
-            "Action": [
-                "dynamodb:BatchGetItem"
-                "dynamodb:BatchWriteItem"
-                "dynamodb:ConditionCheckItem"
-                "dynamodb:DeleteItem"
-                "dynamodb:DescribeTable"
-                "dynamodb:GetItem"
-                "dynamodb:PutItem"
-                "dynamodb:Query"
-                "dynamodb:Scan"
-                "dynamodb:UpdateItem"
-            ],
-            "Resource": [
-                "{dynamodb_table_arn}",
-                "{dynamodb_table_arn}/index/*"
-            ],
-            "Effect": "Allow"
-        }
-    ]
-}""".format(dynamodb_table_arn)
+def create_iam_role(
+    name: str,
+    assume_role_policy_json: str,
+    policy_args: Optional[Sequence[RoleInlinePolicyArgs]] = None,
+) -> Role:
+
+    boundary_policy = config.get("boundaryPolicy")
+    return Role(
+        name,
+        name=name,
+        assume_role_policy=assume_role_policy_json,
+        inline_policies=policy_args,
+        permissions_boundary=boundary_policy,
+    )
+
+
