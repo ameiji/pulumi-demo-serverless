@@ -70,7 +70,7 @@ def _create_integration_response(
             "method.response.header.Access-Control-Allow-Methods": True,
             "method.response.header.Access-Control-Allow-Headers": True,
         },
-        opts=pulumi.ResourceOptions(parent=api_integration, depends_on=api_integration),
+        opts=pulumi.ResourceOptions(parent=api_integration, depends_on=api_integration)
     )
     integration_response = aws.apigateway.IntegrationResponse(
         f"{name}IntegrationResponse",
@@ -94,14 +94,14 @@ def _create_integration_response(
 def _create_api_resource(
     rest_api: aws.apigateway.RestApi,
     path: str,
-    api_resource: APIResourceDescription,
+    api_resource_description: APIResourceDescription,
     authorizer: aws.apigateway.Authorizer,
     lambda_policies: list[aws.iam.RoleInlinePolicyArgs],
     lambda_environment: Optional[Dict[str, str]] = None,
 ):
     path_part = path.split("/")[-1]
 
-    for method, api_function in api_resource.methods.items():
+    for method, api_function in api_resource_description.methods.items():
         # Create Lambda
         if api_function.integration_type != "MOCK":
             lambda_ = _create_lambda_resource(
@@ -110,22 +110,22 @@ def _create_api_resource(
                 lambda_policies=lambda_policies,
                 environment=lambda_environment,
             )
-            api_resource.methods[method].lambda_ = lambda_
+            api_resource_description.methods[method].lambda_ = lambda_
 
     # API GW Resource
-    if api_resource.is_root:
-        resource = aws.apigateway.Resource(
-            api_resource.name,
+    if api_resource_description.is_root:
+        api_resource = aws.apigateway.Resource(
+            api_resource_description.name,
             parent_id=rest_api.root_resource_id,
             path_part=path_part,
             rest_api=rest_api.id,
             opts=pulumi.ResourceOptions(parent=rest_api),
         )
-        _resources[path] = resource
+        _resources[path] = api_resource
     else:
         parent_path = "/".join(path.split("/")[:-1])
-        resource = aws.apigateway.Resource(
-            api_resource.name,
+        api_resource = aws.apigateway.Resource(
+            api_resource_description.name,
             parent_id=_resources[parent_path].id,
             path_part=path_part,
             rest_api=rest_api.id,
@@ -133,18 +133,19 @@ def _create_api_resource(
                 depends_on=[rest_api, _resources[parent_path]], parent=rest_api
             ),
         )
-        _resources[path] = resource
+        _resources[path] = api_resource
 
-    for api_resource_method, api_function in api_resource.methods.items():
+    for api_resource_method, api_function in api_resource_description.methods.items():
+
         # API GW Method
         method = aws.apigateway.Method(
-            f"{api_resource.name}{api_resource_method}",
+            f"{api_resource_description.name}{api_resource_method}",
             http_method=api_resource_method,
-            resource_id=resource.id,
+            resource_id=api_resource.id,
             rest_api=rest_api.id,
             authorization=api_function.authorization,
             authorizer_id=authorizer.id,
-            opts=pulumi.ResourceOptions(parent=rest_api, depends_on=[authorizer]),
+            opts=pulumi.ResourceOptions(parent=api_resource, depends_on=[authorizer]),
         )
 
         # API GW Integration
@@ -152,32 +153,30 @@ def _create_api_resource(
             integration_uri = None
             request_templates = {"application/json": '{\n  "statusCode" : 200\n}\n'}
         else:
-            integration_uri = api_resource.methods[api_resource_method].lambda_.invoke_arn
+            integration_uri = api_resource_description.methods[api_resource_method].lambda_.invoke_arn
             request_templates = None
 
         integration = aws.apigateway.Integration(
-            f"{api_resource.name}{api_resource_method}Integration",
+            f"{api_resource_description.name}{api_resource_method}Integration",
             rest_api=rest_api.id,
-            resource_id=resource.id,
+            resource_id=api_resource.id,
             http_method=method.http_method,
             integration_http_method=api_function.integration_method,  # For Lambda it is always POST
             # passthrough_behavior="WHEN_NO_TEMPLATES",
             request_templates=request_templates,
             type=api_function.integration_type,
             uri=integration_uri,
-            opts=pulumi.ResourceOptions(parent=rest_api),
+            opts=pulumi.ResourceOptions(parent=api_resource),
         )
 
         if api_function.integration_type == "MOCK":
-            integration_response = _create_integration_response(
-                name=f"{api_resource.name}Mock",
+            _create_integration_response(
+                name=f"{api_resource_description.name}{api_resource_method}Mock",
                 rest_api=rest_api,
-                api_resource=resource,
+                api_resource=api_resource,
                 api_integration=integration,
                 http_method=api_resource_method,
             )
-            _integration_responses.append(integration_response)
-
         _integrations.append(integration)
 
 
@@ -200,7 +199,7 @@ def create_api_gateway(
         _create_api_resource(
             rest_api=rest_api,
             path=resource_path,
-            api_resource=resource,
+            api_resource_description=resource,
             authorizer=cognito_authorizer,
             lambda_policies=lambda_policies,
             lambda_environment=lambda_environment,
