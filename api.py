@@ -27,7 +27,7 @@ class APIResourceFunction(BaseModel):
     def _filename_validator(cls, filename: Optional[str], values) -> str:
         if filename:
             return filename
-        return os.path.join(backend_src_path, values["name"])
+        return os.path.join(backend_src_path, values["name"], f"{values['name']}.zip")
 
 
 class APIResourceDescription(BaseModel):
@@ -58,7 +58,7 @@ addTodo = APIResourceFunction(
 getAllTodo = APIResourceFunction(
     name="getAllTodo",
     allowed_path="*/GET/item",
-    handler="app.getAllTodo",
+    handler="app.getAllToDoItem",
     environment={
         "AWS_NODEJS_CONNECTION_REUSE_ENABLED": "1",
         "ENDPOINT_OVERRIDE": ""
@@ -67,7 +67,7 @@ getAllTodo = APIResourceFunction(
 completeTodo = APIResourceFunction(
     name="completeTodo",
     allowed_path="*/POST/item/*/done",
-    handler="app.completeTodo",
+    handler="app.completeToDoItem",
     environment={
         "AWS_NODEJS_CONNECTION_REUSE_ENABLED": "1",
         "ENDPOINT_OVERRIDE": ""
@@ -76,7 +76,7 @@ completeTodo = APIResourceFunction(
 getTodo = APIResourceFunction(
     name="getTodo",
     allowed_path="*/GET/item/*",
-    handler="app.getTodo",
+    handler="app.getToDoItem",
     environment={
         "AWS_NODEJS_CONNECTION_REUSE_ENABLED": "1",
         "USE_DYNAMODB_LOCAL": "0",
@@ -86,7 +86,7 @@ getTodo = APIResourceFunction(
 updateTodo = APIResourceFunction(
     name="updateTodo",
     allowed_path="*/PUT/item/*",
-    handler="app.updateTodo",
+    handler="app.updateToDoItem",
     environment={
         "AWS_NODEJS_CONNECTION_REUSE_ENABLED": "1"
     }
@@ -94,7 +94,7 @@ updateTodo = APIResourceFunction(
 deleteTodo = APIResourceFunction(
     name="deleteTodo",
     allowed_path="*/DELETE/item/*",
-    handler="app.deleteTodo",
+    handler="app.deleteToDoItem",
     environment={
         "AWS_NODEJS_CONNECTION_REUSE_ENABLED": "1",
         "ENDPOINT_OVERRIDE": ""

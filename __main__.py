@@ -19,14 +19,16 @@ cdn, frontend_s3_bucket = upload_frontend()
 frontend_url = pulumi.Output.concat("https://", cdn.domain_name)
 
 # API Gateway and Lambdas
-api_id, stage_name, invoke_url = create_api_gateway(redirect_url=frontend_url, lambda_policies=[dynamodb_policy])
+api_id, stage_name, invoke_url = create_api_gateway(redirect_url=frontend_url,
+                                                    lambda_policies=[dynamodb_policy],
+                                                    dynamodb_table=table_name)
 
 
 # Export the URLs and hostnames of the bucket and distribution.
-pulumi.export(
-    "originURL", pulumi.Output.concat("http://", frontend_s3_bucket.website_endpoint)
-)
-pulumi.export("originHostname", frontend_s3_bucket.website_endpoint)
+# pulumi.export(
+#     "originURL", pulumi.Output.concat("http://", frontend_s3_bucket.website_endpoint)
+# )
+# pulumi.export("originHostname", frontend_s3_bucket.website_endpoint)
 pulumi.export("s3_bucket_name", frontend_s3_bucket.id)
 pulumi.export("cdnURL", frontend_url)
 pulumi.export("cdnHostname", cdn.domain_name)

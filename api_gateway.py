@@ -137,6 +137,9 @@ def _create_api_resource(
 
     for api_resource_method, api_function in api_resource_description.methods.items():
 
+        # if api_resource_method == "OPTIONS":
+        #     continue  # DEBUG
+
         # API GW Method
         method = aws.apigateway.Method(
             f"{api_resource_description.name}{api_resource_method}",
@@ -169,7 +172,7 @@ def _create_api_resource(
             opts=pulumi.ResourceOptions(parent=api_resource),
         )
 
-        if api_function.integration_type == "MOCK":
+        if (api_function.integration_type == "MOCK") and (api_resource_method == "OPTIONS"):
             _create_integration_response(
                 name=f"{api_resource_description.name}{api_resource_method}Mock",
                 rest_api=rest_api,
@@ -184,6 +187,7 @@ def create_api_gateway(
     redirect_url: pulumi.Output[str],
     lambda_policies: list[aws.iam.RoleInlinePolicyArgs],
     lambda_environment: Optional[Dict[str, str]] = None,
+    dynamodb_table: Optional[str] = None
 ) -> Tuple[pulumi.Output[str]]:
     # API Gateway
     rest_api_name = "workshopServerlessJukeBox"
@@ -193,6 +197,8 @@ def create_api_gateway(
     cognito_authorizer = create_cognito_authorizer(
         rest_api=rest_api, redirect_url=redirect_url
     )
+
+    lambda_environment = {"TABLE_NAME": dynamodb_table}
 
     # API Resources
     for resource_path, resource in api_resources.items():

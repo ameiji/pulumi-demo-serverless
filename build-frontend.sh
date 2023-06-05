@@ -4,7 +4,7 @@
 set -eux
 
 gpulumi="$HOME/Downloads/pulumi/pulumi"
-
+STACK_NAME="pulumi-demo-serverless"
 
 # Create build dir
 BUILD_DIR=/tmp/build
@@ -13,6 +13,7 @@ rm -rf frontend-src/build
 cp -rv frontend-src "$BUILD_DIR"
 
 # Get stack outputs
+$gpulumi stack select "$STACK_NAME"
 $gpulumi stack output -j > pulumi_stack_output.json
 
 AWS_USER_POOLS_WEB_CLIENT_ID=$( cat pulumi_stack_output.json | jq '.aws_user_pools_web_client_id')

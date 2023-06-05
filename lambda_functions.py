@@ -52,13 +52,15 @@ def create_lambda_function(
                                            assume_policy_filename="lambdas/execution_role.json",
                                            policy_args=lambda_policies)
 
+    # asset_archive = pulumi.asset.AssetArchive({"folder": pulumi.FileArchive(filename)})
+    asset_archive = pulumi.FileArchive(filename)
     func = aws.lambda_.Function(
         name,
         name=name,
         runtime=runtime,
         role=role_arn,
         handler=handler,
-        code=pulumi.asset.AssetArchive({"folder": pulumi.FileArchive(filename)}),
+        code=asset_archive,
         timeout=timeout,
         description=description,
         environment={"variables": environment},

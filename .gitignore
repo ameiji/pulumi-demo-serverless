@@ -166,3 +166,7 @@ venv/
 # ToDO API
 
 frontend-src/build/
+backend-src/node_modules/*
+backend-src/*/node_modules/*
+backend-src/*/package-lock.json
+

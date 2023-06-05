@@ -2,7 +2,7 @@
   "name": "UpdateTodo-item",
   "version": "1.0.0",
   "description": "Updates a ToDo item on the DynamoDB Table",
-  "main": "src/app.js",
+  "main": "app.js",
   "author": "SAM CLI",
   "license": "MIT",
   "dependencies": {
