@@ -1,0 +1,19 @@
+config:
+  projectName: toDoAPI-lambdas
+  frontendSRCPath: "../frontend-src/build"
+  backendSRCPath: "../backend-src"
+  lambdasRolesPath: "../lambdas"
+  stageName: demo
+  aws:region: eu-west-1
+  aws:profile: aws-wtf
+  aws:allowedAccountIds: [490876619407,474008963679, 849810908946]
+  aws:defaultTags:
+    tags:
+      Project: workshop-serverless
+      Owner: "psalnikov dsarkisov"
+      Env: demo
+  pulumi:template: aws-python
+#  boundaryPolicy: "arn:aws:iam::474008963679:policy/DefaultBoundaryPolicy"
+  boundaryPolicy: "arn:aws:iam::849810908946:policy/DefaultBoundaryPolicy"
+
+
