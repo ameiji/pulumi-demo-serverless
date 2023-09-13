@@ -95,6 +95,20 @@ install: clean
 
 
 # Pulumi-related targets
+stack-init:
+	@echo "=> Init Pulumi stack"
+	pushd $(SRC_DIR) ;\
+	pulumi logout && pulumi login --local ;\
+	pulumi stack init aws-serverless-app || true ;\
+	pulumi stack select aws-serverless-app ;\
+	cp Pulumi.stack_template.yaml Pulumi.aws-serverless-app.yaml ;\
+	pulumi stack ls ;\
+	popd
+	@echo "=> Stack init finished. Make sure you have changed your stack config file Pulumi.aws-serverless-app.yaml:"
+	@echo "=>     - Add your account id in the list (allowedAccountIds)"
+	@echo "=>     - Add random suffix for the Cognito domain (cognitoDomain)"
+	@echo "=>     - Uncomment if you need a boundaryPolicy"
+	
 build-backend:
 	@echo "=> Building backend"
 	pushd $(SRC_DIR) ;\
