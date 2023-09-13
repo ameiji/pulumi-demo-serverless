@@ -112,7 +112,7 @@ def _create_cf_cdn(bucket: aws.s3.Bucket, allowed_methods: List[str]) -> aws.clo
     return cdn
 
 
-def upload_frontend() -> aws.s3.Bucket:
+def upload_frontend() -> tuple[aws.cloudfront.Distribution, aws.s3.Bucket]:
     allowed_methods = ["GET", "HEAD", "POST", "DELETE", "PUT", "PATCH", "OPTIONS"]
     s3_bucket = _create_s3_bucket()
     cdn = _create_cf_cdn(bucket=s3_bucket, allowed_methods=allowed_methods)

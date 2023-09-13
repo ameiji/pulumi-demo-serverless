@@ -3,7 +3,7 @@
 import pulumi
 
 from api_gateway import create_api_gateway
-from s3 import upload_frontend
+from cloudfront import upload_frontend
 from dynamodb import create_todo_table
 from lambda_functions import create_lambda_dynamodb_policy
 

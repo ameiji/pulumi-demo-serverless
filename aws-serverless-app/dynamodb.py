@@ -15,6 +15,7 @@ def _create_dynamodb_table(
         Sequence[aws.dynamodb.TableGlobalSecondaryIndexArgs]
     ] = None,
 ) -> aws.dynamodb.Table:
+
     _attributes: Sequence[aws.dynamodb.TableAttributeArgs] = []
     for attr in attributes:
         _attributes.append(
