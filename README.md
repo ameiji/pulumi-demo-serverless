@@ -21,6 +21,11 @@ Also consider the project was developed for demonstration purposes. So we decide
 ### Deploy the project
 
 #### Makefile
+Initialize the project
+```
+    make stack-init
+```
+
 Build backend and frontend code and run pulumi up using:
 ```
     make all
